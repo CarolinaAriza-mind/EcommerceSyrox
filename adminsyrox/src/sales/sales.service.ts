@@ -1,0 +1,120 @@
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateSaleDto } from './dto/create-sale.dto';
+import { Prisma, SaleStatus } from '@prisma/client';
+
+@Injectable()
+export class SalesService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  findAll() {
+    return this.prisma.sale.findMany({
+      include: {
+        customer: true,
+        items: { include: { product: true } },
+      },
+      orderBy: { date: 'desc' },
+    });
+  }
+
+  async findOne(id: string) {
+    const sale = await this.prisma.sale.findUnique({
+      where: { id },
+      include: {
+        customer: true,
+        items: { include: { product: true } },
+      },
+    });
+    if (!sale) throw new NotFoundException(`Venta ${id} no encontrada`);
+    return sale;
+  }
+
+  async updateStatus(id: string, status: string) {
+    const sale = await this.prisma.sale.findUnique({ where: { id } });
+    if (!sale) throw new NotFoundException(`Venta ${id} no encontrada`);
+
+    return this.prisma.sale.update({
+      where: { id },
+      data: { status: status as SaleStatus },
+      include: {
+        customer: true,
+        items: { include: { product: true } },
+      },
+    });
+  }
+
+  async create(createSaleDto: CreateSaleDto) {
+    const { customerId, items, status } = createSaleDto;
+
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+    });
+    if (!customer)
+      throw new NotFoundException(`Cliente ${customerId} no encontrado`);
+
+    const productIds = items.map((i) => i.productId);
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: productIds } },
+    });
+
+    if (products.length !== productIds.length) {
+      const foundIds = products.map((p) => p.id);
+      const missing = productIds.filter((id) => !foundIds.includes(id));
+      throw new BadRequestException(
+        `Productos no encontrados: ${missing.join(', ')}`,
+      );
+    }
+
+    const productMap = new Map<string, (typeof products)[number]>(
+      products.map((p) => [p.id, p]),
+    );
+
+    let total = 0;
+    const saleItems = items.map((item) => {
+      const product = productMap.get(item.productId);
+      if (!product)
+        throw new BadRequestException(
+          `Producto ${item.productId} no encontrado`,
+        );
+
+      const subtotal = Number(product.price) * item.quantity;
+      total += subtotal;
+
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: Number(product.price),
+        subtotal,
+      };
+    });
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        return tx.sale.create({
+          data: {
+            customerId,
+            status,
+            total,
+            date: new Date(),
+            items: { createMany: { data: saleItems } },
+          },
+          include: {
+            items: true,
+            customer: true,
+          },
+        });
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new BadRequestException(
+          `Error al crear la venta: ${error.message}`,
+        );
+      }
+      throw error;
+    }
+  }
+}
