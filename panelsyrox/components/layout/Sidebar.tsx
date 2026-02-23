@@ -31,7 +31,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-700">
         {!collapsed && (
           <span className="font-bold text-base text-gray-800 dark:text-white">
-            Tech Ecommerce
+            Tech House
           </span>
         )}
         <button

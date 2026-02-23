@@ -3,14 +3,12 @@
 import { useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { ThemeProvider } from '@/components/layout/ThemeProviders';
 import { cn } from '@/lib/utils';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <ThemeProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
         <Header sidebarCollapsed={collapsed} />
@@ -23,6 +21,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="p-6">{children}</div>
         </main>
       </div>
-    </ThemeProvider>
   );
 }

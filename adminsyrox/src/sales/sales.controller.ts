@@ -37,8 +37,22 @@ export class SalesController {
   @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,
-    @Body() body: { status: string; notes?: string },
+    @Body()
+    body: {
+      status: string;
+      notes?: string;
+      trackingCode?: string;
+      address?: string;
+      adminName?: string;
+    },
   ) {
-    return this.salesService.updateStatus(id, body.status);
+    return this.salesService.updateStatus(
+      id,
+      body.status,
+      body.notes,
+      body.trackingCode,
+      body.address,
+      body.adminName,
+    );
   }
 }

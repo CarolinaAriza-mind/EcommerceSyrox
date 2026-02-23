@@ -1,7 +1,7 @@
 import {
   Injectable,
-  BadRequestException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
@@ -33,13 +33,40 @@ export class SalesService {
     return sale;
   }
 
-  async updateStatus(id: string, status: string) {
+  async updateStatus(
+    id: string,
+    status: string,
+    notes?: string,
+    trackingCode?: string,
+    address?: string,
+    adminName?: string,
+  ) {
     const sale = await this.prisma.sale.findUnique({ where: { id } });
     if (!sale) throw new NotFoundException(`Venta ${id} no encontrada`);
 
+    const statusMessages: Record<string, string> = {
+      PREPARING: 'Pedido en preparación',
+      SHIPPED: trackingCode
+        ? `Pedido enviado con tracking: ${trackingCode}`
+        : 'Pedido enviado',
+      COMPLETED: 'Pedido completado',
+      CANCELLED: 'Pedido cancelado',
+    };
+
+    const autoMessage =
+      statusMessages[status] ?? `Estado actualizado a ${status}`;
+    const adminSuffix = adminName ? `\nPor: ${adminName}` : '';
+    const customNotes = notes ? `\n${notes}` : '';
+    const finalNotes = `${autoMessage}${customNotes}${adminSuffix}`;
+
     return this.prisma.sale.update({
       where: { id },
-      data: { status: status as SaleStatus },
+      data: {
+        status: status as SaleStatus,
+        notes: finalNotes,
+        ...(trackingCode && { trackingCode }),
+        ...(address && { address }),
+      },
       include: {
         customer: true,
         items: { include: { product: true } },
@@ -80,10 +107,8 @@ export class SalesService {
         throw new BadRequestException(
           `Producto ${item.productId} no encontrado`,
         );
-
       const subtotal = Number(product.price) * item.quantity;
       total += subtotal;
-
       return {
         productId: item.productId,
         quantity: item.quantity,
@@ -102,10 +127,7 @@ export class SalesService {
             date: new Date(),
             items: { createMany: { data: saleItems } },
           },
-          include: {
-            items: true,
-            customer: true,
-          },
+          include: { items: true, customer: true },
         });
       });
     } catch (error) {

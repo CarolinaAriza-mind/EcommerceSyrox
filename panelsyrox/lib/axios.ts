@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getToken, removeToken } from './auth';
+import { getTokenFromCookie, removeToken } from './auth';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL, 
@@ -10,7 +10,7 @@ const api = axios.create({
 
 // Agrega el token automáticamente en cada request
 api.interceptors.request.use((config) => {
-  const token = getToken();
+  const token = getTokenFromCookie();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

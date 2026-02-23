@@ -1,23 +1,10 @@
-import { cookies } from 'next/headers';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ShoppingCart, Package } from 'lucide-react';
-import { DashboardData, DashboardProduct, DashboardSale, TopProduct } from '@/interfaces/dashboard.interfaces';
-
-// Fetch
-async function getDashboardData(): Promise<DashboardData | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin_token')?.value;
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    },
-  );
-
-  if (!res.ok) return null;
-  return res.json() as Promise<DashboardData>;
-}
+import type { DashboardData, DashboardProduct, DashboardSale, TopProduct } from '@/interfaces/dashboard.interfaces';
+import { getTokenFromCookie } from '@/lib/auth';
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
@@ -41,8 +28,38 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export default async function AdminDashboard() {
-  const data = await getDashboardData();
+export default function AdminDashboard() {
+  const router = useRouter();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const token = getTokenFromCookie();
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard`,
+          {
+            headers: { Authorization: `Bearer ${token ?? ''}` },
+          },
+        );
+        if (res.ok) setData(await res.json() as DashboardData);
+      } catch {
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchDashboard();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-gray-400">Cargando dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -76,12 +93,21 @@ export default async function AdminDashboard() {
                 <span className="text-gray-500 shrink-0">{p.stock} uds.</span>
               </div>
             ))}
+            {!data?.inventory?.products?.length && (
+              <p className="text-sm text-gray-400">Sin productos en inventario.</p>
+            )}
           </div>
           <div className="flex gap-2 mt-4">
-            <button className="text-sm bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-3 py-1.5 rounded-md hover:opacity-80">
+            <button
+              onClick={() => router.push('/admin/products')}
+              className="text-sm bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-3 py-1.5 rounded-md hover:opacity-80"
+            >
               + Añadir
             </button>
-            <button className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5">
+            <button
+              onClick={() => router.push('/admin/products')}
+              className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5"
+            >
               ··· Ver Todos
             </button>
           </div>
@@ -95,14 +121,15 @@ export default async function AdminDashboard() {
             </h2>
             <ShoppingCart size={18} className="text-gray-400" />
           </div>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+          <div className="space-y-3 max-h-72 overflow-y-auto">
             {!data?.recentSales?.length && (
               <p className="text-sm text-gray-400">No hay ventas recientes.</p>
             )}
             {data?.recentSales?.map((sale: DashboardSale) => (
               <div
                 key={sale.id}
-                className="flex justify-between items-start border-b border-gray-100 dark:border-gray-700 pb-3"
+                className="flex justify-between items-start border-b border-gray-100 dark:border-gray-700 pb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded px-1"
+                onClick={() => router.push('/admin/sales')}
               >
                 <div>
                   <p className="text-sm font-medium text-gray-800 dark:text-white">
@@ -124,6 +151,12 @@ export default async function AdminDashboard() {
               </div>
             ))}
           </div>
+          <button
+            onClick={() => router.push('/admin/sales')}
+            className="w-full mt-4 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700 py-1.5 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            Ver todas las ventas →
+          </button>
         </div>
 
         {/* Top Productos */}
@@ -137,16 +170,33 @@ export default async function AdminDashboard() {
             </p>
           ) : (
             <div className="space-y-3">
-              {data.topProducts.map((tp: TopProduct) => (
-                <div key={tp.productId} className="flex justify-between text-sm">
-                  <span className="text-gray-700 dark:text-gray-300 truncate max-w-[70%]">
-                    {tp.product?.name}
+              {data.topProducts.map((tp: TopProduct, index: number) => (
+                <div
+                  key={tp.productId}
+                  className="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded px-1 py-0.5"
+                  onClick={() => router.push('/admin/products')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs flex items-center justify-center font-bold">
+                      {index + 1}
+                    </span>
+                    <span className="text-gray-700 dark:text-gray-300 truncate max-w-[60%]">
+                      {tp.product?.name}
+                    </span>
+                  </div>
+                  <span className="text-gray-500 shrink-0">
+                    {tp._sum?.quantity} vendidos
                   </span>
-                  <span className="text-gray-500">{tp._sum?.quantity} vendidos</span>
                 </div>
               ))}
             </div>
           )}
+          <button
+            onClick={() => router.push('/admin/products')}
+            className="w-full mt-4 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700 py-1.5 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            Ver todos los productos →
+          </button>
         </div>
 
       </div>

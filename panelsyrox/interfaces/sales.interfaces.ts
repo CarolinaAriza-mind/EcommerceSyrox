@@ -11,7 +11,7 @@ export interface SaleItem {
   quantity: number;
   unitPrice: number;
   subtotal: number;
-  product?: { name: string; price: number };
+  product?: { name: string; price: number; imageUrl?: string };
 }
 
 export interface Sale {
@@ -19,6 +19,10 @@ export interface Sale {
   status: string;
   total: number;
   date: string;
+  paymentMethod?: string;
+  trackingCode?: string;
+  address?: string;
+  notes?: string;
   customer: Customer;
   items: SaleItem[];
 }
@@ -46,3 +50,11 @@ export const STATUS_OPTIONS = [
   { value: 'COMPLETED', label: 'Completado' },
   { value: 'CANCELLED', label: 'Cancelado' },
 ];
+
+export const NEXT_STATUS: Record<string, { value: string; label: string }> = {
+  PENDING:   { value: 'PREPARING', label: 'Iniciar Preparación' },
+  PREPARING: { value: 'SHIPPED',   label: 'Marcar como Enviado' },
+  SHIPPED:   { value: 'COMPLETED', label: 'Completar Pedido' },
+  COMPLETED: { value: 'COMPLETED', label: 'Pedido Completado' },
+  CANCELLED: { value: 'CANCELLED', label: 'Pedido Cancelado' },
+};

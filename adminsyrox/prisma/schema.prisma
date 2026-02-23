@@ -33,20 +33,37 @@ model Category {
   products  Product[]
 }
 
+model Brand {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
 model Product {
-  id          String     @id @default(uuid()) @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
   name        String
   description String?
   price       Float
-  stock       Int        @default(0)
-  status      String     @default("ACTIVE")
-  categoryId  String     @db.Uuid
-  category    Category   @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime   @default(now())
-
+  stock       Int       @default(0)
+  status      String    @default("ACTIVE")
+  imageUrl    String?
+  categoryId  String?   @db.Uuid
+  category    Category? @relation(fields: [categoryId], references: [id])
+  brandId     String?   @db.Uuid
+  brand       Brand?    @relation(fields: [brandId], references: [id])
+  createdAt   DateTime  @default(now())
   saleItems   SaleItem[]
+  options     ProductOption[]
 }
 
+model ProductOption {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @db.Uuid
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  values    String[]
+}
 model Customer {
   id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique
@@ -57,15 +74,27 @@ model Customer {
 }
 
 model Sale {
-  id         String     @id @default(uuid()) @db.Uuid
-  customerId String @db.Uuid
-  status     SaleStatus @default(PENDING)
-  total      Float
-  date       DateTime   @default(now())
-  createdAt  DateTime   @default(now())
+  id            String     @id @default(uuid()) @db.Uuid
+  customerId    String     @db.Uuid
+  customer      Customer   @relation(fields: [customerId], references: [id])
+  status        SaleStatus @default(PENDING)
+  total         Float
+  date          DateTime   @default(now())
+  paymentMethod String?    @default("Tarjeta de Crédito")  // ← agregá
+  trackingCode  String?                                     // ← agregá
+  address       String?                                     // ← agregá
+  notes         String?                                     // ← agregá
+  items         SaleItem[]
+  createdAt     DateTime   @default(now())
+   archived  Boolean  @default(false)
+}
 
-  customer   Customer   @relation(fields: [customerId], references: [id])
-  items      SaleItem[]
+enum SaleStatus {
+  PENDING
+  PREPARING
+  SHIPPED
+  COMPLETED
+  CANCELLED
 }
 
 model SaleItem {
@@ -78,10 +107,4 @@ model SaleItem {
 
   sale      Sale    @relation(fields: [saleId], references: [id])
   product   Product @relation(fields: [productId], references: [id])
-}
-
-enum SaleStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
 }
