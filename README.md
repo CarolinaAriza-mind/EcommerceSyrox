@@ -1,4 +1,4 @@
-# 🛒 Syrox Admin Panel
+# 🛒 Tech House
 
 Panel administrativo completo para gestión de ecommerce, desarrollado como prueba técnica. Incluye autenticación, gestión de productos, categorías, ventas, clientes y marcas con una interfaz moderna y responsiva.
 
