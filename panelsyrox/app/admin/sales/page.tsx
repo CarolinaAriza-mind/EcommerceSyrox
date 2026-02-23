@@ -13,21 +13,27 @@ export default function SalesPage() {
   const [showNewModal, setShowNewModal] = useState(false);
   const [manageSale, setManageSale] = useState<Sale | null>(null);
 
-  useEffect(() => {
-    const fetchSales = async () => {
-      try {
-        const token = getTokenFromCookie();
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/sales`,
-          { headers: { Authorization: `Bearer ${token ?? ''}` } },
-        );
-        if (res.ok) setSales(await res.json() as Sale[]);
-      } catch {
-        setSales([]);
-      } finally {
-        setLoading(false);
+  const fetchSales = async () => {
+    try {
+      const token = getTokenFromCookie();
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/sales?page=1&perPage=1000`,
+        { headers: { Authorization: `Bearer ${token ?? ''}` } },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setSales(data);
+        else if (data && Array.isArray(data.items)) setSales(data.items);
+        else setSales([]);
       }
-    };
+    } catch {
+      setSales([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     void fetchSales();
   }, []);
 
@@ -72,7 +78,10 @@ export default function SalesPage() {
       {showNewModal && (
         <NewSaleModal
           onClose={() => setShowNewModal(false)}
-          onCreated={(newSale) => setSales((prev) => [newSale, ...prev])}
+          onCreated={(newSale) => {
+            setSales((prev) => [newSale, ...prev]);
+            setShowNewModal(false);
+          }}
         />
       )}
     </div>

@@ -12,6 +12,8 @@ interface SalesTableProps {
   onSaleUpdated: (updated: Sale) => void;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export default function SalesTable({
   sales,
   onView,
@@ -19,6 +21,7 @@ export default function SalesTable({
 }: SalesTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filtered = sales.filter((s) => {
     const matchesSearch =
@@ -28,25 +31,47 @@ export default function SalesTable({
     return matchesSearch && matchesStatus;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
   const isFailedStatus = (status: string) => status === "CANCELLED";
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+
+      {/* Barra de búsqueda y filtros */}
       <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-        <h2 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">
-          Listado de Ventas
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-gray-700 dark:text-gray-200">
+            Listado de Ventas
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Mostrando{" "}
+            {filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
+            –{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} de{" "}
+            {filtered.length} ventas
+          </p>
+        </div>
         <div className="flex gap-3">
           <input
             type="text"
-            placeholder="Buscar por nombre..."
+            placeholder="Buscar por nombre o número de orden..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-64 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-72 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
           />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
           >
             <option value="ALL">Todos los estados</option>
@@ -56,12 +81,25 @@ export default function SalesTable({
             <option value="COMPLETED">Completado</option>
             <option value="CANCELLED">Cancelado</option>
           </select>
+          {(search || statusFilter !== "ALL") && (
+            <button
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("ALL");
+                setCurrentPage(1);
+              }}
+              className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
+            >
+              Limpiar
+            </button>
+          )}
         </div>
       </div>
 
       <table className="w-full text-sm">
         <thead className="border-b border-gray-100 dark:border-gray-700">
           <tr className="text-gray-500 dark:text-gray-400 text-left">
+            <th className="px-4 py-3 font-medium w-10">#</th>
             <th className="px-4 py-3 font-medium">Cliente</th>
             <th className="px-4 py-3 font-medium">Número de Orden</th>
             <th className="px-4 py-3 font-medium">Estado</th>
@@ -71,18 +109,21 @@ export default function SalesTable({
           </tr>
         </thead>
         <tbody>
-          {filtered.length === 0 && (
+          {paginated.length === 0 && (
             <tr>
-              <td colSpan={6} className="text-center py-8 text-gray-400">
+              <td colSpan={7} className="text-center py-8 text-gray-400">
                 No hay ventas para mostrar.
               </td>
             </tr>
           )}
-          {filtered.map((sale) => (
+          {paginated.map((sale, index) => (
             <tr
               key={sale.id}
               className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
+              <td className="px-4 py-3 text-gray-400 text-xs">
+                {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+              </td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
@@ -148,6 +189,56 @@ export default function SalesTable({
           ))}
         </tbody>
       </table>
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-4">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-white disabled:opacity-30 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
+          >
+            ←
+          </button>
+          <div className="flex-1 flex items-center gap-3">
+            <span className="text-xs text-gray-400 shrink-0">1</span>
+            <input
+              type="range"
+              min={1}
+              max={totalPages}
+              value={currentPage}
+              onChange={(e) => setCurrentPage(Number(e.target.value))}
+              className="flex-1 accent-gray-900 dark:accent-white cursor-pointer"
+            />
+            <span className="text-xs text-gray-400 shrink-0">{totalPages}</span>
+          </div>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-white disabled:opacity-30 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
+          >
+            →
+          </button>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-7 h-7 text-xs rounded-md font-medium transition-colors ${
+                  page === currentPage
+                    ? "bg-gray-900 dark:bg-white dark:text-gray-900 text-white"
+                    : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 shrink-0">
+            Pág. {currentPage} / {totalPages}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

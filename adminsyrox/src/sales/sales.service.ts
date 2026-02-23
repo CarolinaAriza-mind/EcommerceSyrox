@@ -11,14 +11,33 @@ import { Prisma, SaleStatus } from '@prisma/client';
 export class SalesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.sale.findMany({
-      include: {
-        customer: true,
-        items: { include: { product: true } },
-      },
-      orderBy: { date: 'desc' },
-    });
+  async findAll(opts?: { page?: number; perPage?: number }) {
+    const page = opts?.page && opts.page > 0 ? opts.page : 1;
+    const perPage = opts?.perPage && opts.perPage > 0 ? opts.perPage : 10;
+
+    const [items, total] = await Promise.all([
+      this.prisma.sale.findMany({
+        include: {
+          customer: true,
+          items: { include: { product: true } },
+        },
+        orderBy: { date: 'desc' },
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+      this.prisma.sale.count(),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+    return {
+      items,
+      total,
+      page,
+      perPage,
+      totalPages,
+      hasMore: page < totalPages,
+    };
   }
 
   async findOne(id: string) {

@@ -16,7 +16,7 @@ export default function CategoriesPage() {
     try {
       const token = getTokenFromCookie();
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/categories`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/categories?page=1&perPage=1000`,
         { headers: { Authorization: `Bearer ${token ?? ""}` } },
       );
       if (res.ok) {

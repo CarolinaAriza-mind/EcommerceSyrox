@@ -12,11 +12,14 @@ interface CategoriesTableProps {
   onRefresh: () => void;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export default function CategoriesTable({
   categories,
   onRefresh,
 }: CategoriesTableProps) {
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [viewCategory, setViewCategory] = useState<Category | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -28,9 +31,15 @@ export default function CategoriesTable({
     categoryId: null,
     isDeleting: false,
   });
-
+ console.log("categorías recibidas:", categories.length);
   const filtered = categories.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const handleDeleteClick = (id: string) => {
@@ -52,11 +61,7 @@ export default function CategoriesTable({
       );
 
       if (res.ok || res.status === 204) {
-        setDeleteConfirm({
-          isOpen: false,
-          categoryId: null,
-          isDeleting: false,
-        });
+        setDeleteConfirm({ isOpen: false, categoryId: null, isDeleting: false });
         onRefresh();
       } else {
         const data = (await res.json()) as { message: string };
@@ -72,19 +77,44 @@ export default function CategoriesTable({
   return (
     <>
       <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-          <input
-            type="text"
-            placeholder="Buscar por nombre..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-64 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-          />
+
+        {/* Barra de búsqueda */}
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-wrap gap-3 items-center justify-between">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Mostrando{" "}
+            {filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
+            –{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} de{" "}
+            {filtered.length} categorías
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-64 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+            />
+            {search && (
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setCurrentPage(1);
+                }}
+                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
         </div>
 
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 dark:border-gray-700">
             <tr className="text-gray-500 dark:text-gray-400 text-left">
+              <th className="px-4 py-3 font-medium w-10">#</th>
               <th className="px-4 py-3 font-medium">Posición</th>
               <th className="px-4 py-3 font-medium">Nombre</th>
               <th className="px-4 py-3 font-medium">Subcategorías</th>
@@ -93,18 +123,21 @@ export default function CategoriesTable({
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && (
+            {paginated.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-8 text-gray-400">
+                <td colSpan={6} className="text-center py-8 text-gray-400">
                   No hay categorías para mostrar.
                 </td>
               </tr>
             )}
-            {filtered.map((cat) => (
+            {paginated.map((cat, index) => (
               <tr
                 key={cat.id}
                 className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
+                <td className="px-4 py-3 text-gray-400 text-xs">
+                  {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                </td>
                 <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                   {cat.position}
                 </td>
@@ -112,8 +145,7 @@ export default function CategoriesTable({
                   {cat.name}
                 </td>
                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
-                  {cat._count?.children ?? cat.children?.length ?? 0}{" "}
-                  subcategorías
+                  {cat._count?.children ?? cat.children?.length ?? 0} subcategorías
                 </td>
                 <td className="px-4 py-3">
                   {cat.parent ? (
@@ -152,6 +184,56 @@ export default function CategoriesTable({
             ))}
           </tbody>
         </table>
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-4">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-white disabled:opacity-30 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
+            >
+              ←
+            </button>
+            <div className="flex-1 flex items-center gap-3">
+              <span className="text-xs text-gray-400 shrink-0">1</span>
+              <input
+                type="range"
+                min={1}
+                max={totalPages}
+                value={currentPage}
+                onChange={(e) => setCurrentPage(Number(e.target.value))}
+                className="flex-1 accent-gray-900 dark:accent-white cursor-pointer"
+              />
+              <span className="text-xs text-gray-400 shrink-0">{totalPages}</span>
+            </div>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-white disabled:opacity-30 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
+            >
+              →
+            </button>
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-7 h-7 text-xs rounded-md font-medium transition-colors ${
+                    page === currentPage
+                      ? "bg-gray-900 dark:bg-white dark:text-gray-900 text-white"
+                      : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 shrink-0">
+              Pág. {currentPage} / {totalPages}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Modal Ver Categoría */}
@@ -263,11 +345,7 @@ export default function CategoriesTable({
         isLoading={deleteConfirm.isDeleting}
         onConfirm={handleConfirmDelete}
         onCancel={() =>
-          setDeleteConfirm({
-            isOpen: false,
-            categoryId: null,
-            isDeleting: false,
-          })
+          setDeleteConfirm({ isOpen: false, categoryId: null, isDeleting: false })
         }
       />
     </>

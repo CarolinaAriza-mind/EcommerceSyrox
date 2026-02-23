@@ -5,6 +5,7 @@ import {
   Post,
   Patch,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -19,8 +20,11 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Get()
-  findAll() {
-    return this.salesService.findAll();
+  findAll(@Query('page') page?: string, @Query('perPage') perPage?: string) {
+    return this.salesService.findAll({
+      page: page ? Number(page) : undefined,
+      perPage: perPage ? Number(perPage) : undefined,
+    });
   }
 
   @Get(':id')
