@@ -7,7 +7,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({
-    origin: 'https://ecommerce-syrox.vercel.app/',
+    origin: 'https://ecommerce-syrox.vercel.app',
     credentials: true,
   });
 
