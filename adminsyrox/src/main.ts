@@ -6,7 +6,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  app.enableCors({ origin: 'http://localhost:3000' }); // URL del frontend Next.js
+  app.enableCors({
+    origin: 'http://ecommercesyrox-production-af9f.up.railway.app',
+    credentials: true,
+  });
 
   await app.listen(5000);
   console.log('🚀 Backend corriendo en http://localhost:5000');
