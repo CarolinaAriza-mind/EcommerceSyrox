@@ -27,6 +27,11 @@ export class CategoriesController {
     });
   }
 
+  @Get('all')
+  findAllNoPagination() {
+    return this.categoriesService.findAllNoPagination();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoriesService.findOne(id);

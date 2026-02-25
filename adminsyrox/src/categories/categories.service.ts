@@ -66,6 +66,16 @@ export class CategoriesService {
     });
   }
 
+  findAllNoPagination() {
+    return this.prisma.category.findMany({
+      include: {
+        parent: true,
+        children: true,
+      },
+      orderBy: { position: 'asc' },
+    });
+  }
+
   async update(
     id: string,
     data: { name?: string; parentId?: string; position?: number },
