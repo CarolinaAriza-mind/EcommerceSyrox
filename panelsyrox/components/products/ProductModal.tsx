@@ -53,7 +53,7 @@ export default function ProductModal({
       try {
         const token = getTokenFromCookie();
         const [catRes, brandRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories?limit=1000`, {
             headers: { Authorization: `Bearer ${token ?? ""}` },
           }),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/brands`, {
