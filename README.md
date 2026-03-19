@@ -251,6 +251,8 @@ SaleItem
 | GET | `/admin/dashboard` | Métricas del panel |
 
 ---
+## Aplicacion desplegada en Vercel 
+[Tech House](https://ecommerce-syrox.vercel.app/)
 
 ## 👩‍💻 Desarrollado por
 
