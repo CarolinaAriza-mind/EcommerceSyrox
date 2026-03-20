@@ -21,17 +21,17 @@ export default function ProductDetailModal({
     : [];
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-sm max-h-[80vh] overflow-y-auto shadow-xl">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-xl w-full sm:max-w-sm max-h-[90vh] sm:max-h-[80vh] overflow-y-auto shadow-xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-900 z-10">
           <h2 className="font-semibold text-gray-800 dark:text-white text-sm">
             Detalles del Producto
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
           >
             <X size={18} />
           </button>
@@ -53,11 +53,11 @@ export default function ProductDetailModal({
 
           {/* Nombre y descripción */}
           <div>
-            <p className="font-semibold text-gray-800 dark:text-white">
+            <p className="font-semibold text-gray-800 dark:text-white text-base">
               {product.name}
             </p>
             {product.description && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
                 {product.description}
               </p>
             )}
@@ -74,7 +74,8 @@ export default function ProductDetailModal({
             <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-3">
               <p className="text-xs text-gray-400 mb-1">Stock</p>
               <p className="text-sm font-semibold text-gray-800 dark:text-white">
-                {product.stock} unidades
+                {product.stock}{" "}
+                <span className="font-normal text-gray-500 dark:text-gray-400">uds.</span>
               </p>
             </div>
           </div>
@@ -117,7 +118,7 @@ export default function ProductDetailModal({
           </div>
 
           {/* Estado */}
-          <div className="flex justify-between items-center px-1">
+          <div className="flex justify-between items-center px-1 pb-2">
             <p className="text-xs text-gray-400">Estado</p>
             <span className={`text-xs px-2 py-1 rounded-full font-medium ${
               product.status === "ACTIVE"

@@ -31,7 +31,9 @@ export default function CategoriesTable({
     categoryId: null,
     isDeleting: false,
   });
- console.log("categorías recibidas:", categories.length);
+
+  console.log("categorías recibidas:", categories.length);
+
   const filtered = categories.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()),
   );
@@ -76,17 +78,15 @@ export default function CategoriesTable({
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
 
         {/* Barra de búsqueda */}
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-wrap gap-3 items-center justify-between">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Mostrando{" "}
-            {filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
-            –{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} de{" "}
-            {filtered.length} categorías
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+            {filtered.length === 0 ? "0" : `${(currentPage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}`}
+            {" "}de {filtered.length} categorías
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <input
               type="text"
               placeholder="Buscar por nombre..."
@@ -95,7 +95,7 @@ export default function CategoriesTable({
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-64 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+              className="flex-1 sm:w-64 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
             />
             {search && (
               <button
@@ -103,7 +103,7 @@ export default function CategoriesTable({
                   setSearch("");
                   setCurrentPage(1);
                 }}
-                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
+                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg whitespace-nowrap"
               >
                 Limpiar
               </button>
@@ -111,91 +111,115 @@ export default function CategoriesTable({
           </div>
         </div>
 
-        <table className="w-full text-sm">
-          <thead className="border-b border-gray-100 dark:border-gray-700">
-            <tr className="text-gray-500 dark:text-gray-400 text-left">
-              <th className="px-4 py-3 font-medium w-10">#</th>
-              <th className="px-4 py-3 font-medium">Posición</th>
-              <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Subcategorías</th>
-              <th className="px-4 py-3 font-medium">Categoría Padre</th>
-              <th className="px-4 py-3 font-medium">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginated.length === 0 && (
-              <tr>
-                <td colSpan={6} className="text-center py-8 text-gray-400">
-                  No hay categorías para mostrar.
-                </td>
+        {/* Tabla con scroll horizontal en mobile */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
+            <thead className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
+              <tr className="text-gray-500 dark:text-gray-400 text-left">
+                <th className="px-4 py-3 font-medium text-xs uppercase tracking-wider w-10">#</th>
+                <th className="px-4 py-3 font-medium text-xs uppercase tracking-wider">Pos.</th>
+                <th className="px-4 py-3 font-medium text-xs uppercase tracking-wider">Nombre</th>
+                <th className="px-4 py-3 font-medium text-xs uppercase tracking-wider hidden md:table-cell">Subcategorías</th>
+                <th className="px-4 py-3 font-medium text-xs uppercase tracking-wider">Padre</th>
+                <th className="px-4 py-3 font-medium text-xs uppercase tracking-wider text-right">Acciones</th>
               </tr>
-            )}
-            {paginated.map((cat, index) => (
-              <tr
-                key={cat.id}
-                className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <td className="px-4 py-3 text-gray-400 text-xs">
-                  {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
-                </td>
-                <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                  {cat.position}
-                </td>
-                <td className="px-4 py-3 font-medium text-gray-800 dark:text-white">
-                  {cat.name}
-                </td>
-                <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
-                  {cat._count?.children ?? cat.children?.length ?? 0} subcategorías
-                </td>
-                <td className="px-4 py-3">
-                  {cat.parent ? (
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                      {cat.parent.name}
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+              {paginated.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center py-16 text-gray-400 text-sm">
+                    No hay categorías para mostrar.
+                  </td>
+                </tr>
+              )}
+              {paginated.map((cat, index) => (
+                <tr
+                  key={cat.id}
+                  className="hover:bg-gray-50/70 dark:hover:bg-gray-800/50 transition-colors"
+                >
+                  <td className="px-4 py-3.5 text-gray-400 text-xs">
+                    {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                  </td>
+                  <td className="px-4 py-3.5 text-gray-500 dark:text-gray-400 text-xs font-mono">
+                    {cat.position}
+                  </td>
+                  <td className="px-4 py-3.5 font-medium text-gray-800 dark:text-white">
+                    {cat.name}
+                  </td>
+                  <td className="px-4 py-3.5 text-gray-500 dark:text-gray-400 hidden md:table-cell">
+                    <span className="inline-flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+                      {cat._count?.children ?? cat.children?.length ?? 0}
+                      <span className="hidden lg:inline">subcategorías</span>
                     </span>
-                  ) : (
-                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                      Principal
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setViewCategory(cat)}
-                      className="text-gray-400 hover:text-gray-700 dark:hover:text-white"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      onClick={() => setEditCategory(cat)}
-                      className="text-gray-400 hover:text-blue-600"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(cat.id)}
-                      className="text-gray-400 hover:text-red-600"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    {cat.parent ? (
+                      <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium whitespace-nowrap">
+                        {cat.parent.name}
+                      </span>
+                    ) : (
+                      <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                        Principal
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex gap-1 justify-end">
+                      <button
+                        onClick={() => setViewCategory(cat)}
+                        title="Ver detalle"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <Eye size={15} />
+                      </button>
+                      <button
+                        onClick={() => setEditCategory(cat)}
+                        title="Editar"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(cat.id)}
+                        title="Eliminar"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Paginación */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-4">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-white disabled:opacity-30 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
-            >
-              ←
-            </button>
-            <div className="flex-1 flex items-center gap-3">
+          <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-3">
+            {/* Flechas y página actual */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-white disabled:opacity-30 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg transition-colors"
+              >
+                ←
+              </button>
+              <span className="text-xs text-gray-500 dark:text-gray-400 px-1">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-white disabled:opacity-30 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg transition-colors"
+              >
+                →
+              </button>
+            </div>
+
+            {/* Slider - oculto en mobile muy chico */}
+            <div className="hidden sm:flex flex-1 items-center gap-3 max-w-xs">
               <span className="text-xs text-gray-400 shrink-0">1</span>
               <input
                 type="range"
@@ -207,81 +231,76 @@ export default function CategoriesTable({
               />
               <span className="text-xs text-gray-400 shrink-0">{totalPages}</span>
             </div>
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-white disabled:opacity-30 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
-            >
-              →
-            </button>
-            <div className="flex gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-7 h-7 text-xs rounded-md font-medium transition-colors ${
-                    page === currentPage
-                      ? "bg-gray-900 dark:bg-white dark:text-gray-900 text-white"
-                      : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-gray-400 shrink-0">
-              Pág. {currentPage} / {totalPages}
-            </p>
+
+            {/* Números de página - solo si hay pocos */}
+            {totalPages <= 7 && (
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-7 h-7 text-xs rounded-lg font-medium transition-colors ${
+                      page === currentPage
+                        ? "bg-gray-900 dark:bg-white dark:text-gray-900 text-white"
+                        : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Modal Ver Categoría */}
       {viewCategory && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-xl w-full sm:max-w-md shadow-2xl">
             <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
               <h2 className="font-semibold text-gray-800 dark:text-white">
                 Detalle de Categoría
               </h2>
               <button
                 onClick={() => setViewCategory(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             <div className="p-5 space-y-4">
               <div>
-                <p className="text-xs text-gray-400 mb-1">Nombre</p>
+                <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider">Nombre</p>
                 <p className="font-semibold text-gray-800 dark:text-white text-lg">
                   {viewCategory.name}
                 </p>
               </div>
 
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Categoría Padre</p>
-                {viewCategory.parent ? (
-                  <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                    {viewCategory.parent.name}
-                  </span>
-                ) : (
-                  <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                    Principal
-                  </span>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider">Categoría Padre</p>
+                  {viewCategory.parent ? (
+                    <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-medium">
+                      {viewCategory.parent.name}
+                    </span>
+                  ) : (
+                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                      Principal
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider">Posición</p>
+                  <p className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                    {viewCategory.position}
+                  </p>
+                </div>
               </div>
 
               <div>
-                <p className="text-xs text-gray-400 mb-1">Posición</p>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {viewCategory.position}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-400 mb-2">
+                <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider">
                   Subcategorías ({viewCategory.children?.length ?? 0})
                 </p>
                 {viewCategory.children?.length > 0 ? (
@@ -300,19 +319,19 @@ export default function CategoriesTable({
                 )}
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => {
                     setViewCategory(null);
                     setEditCategory(viewCategory);
                   }}
-                  className="flex-1 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="flex-1 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 py-2.5 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => setViewCategory(null)}
-                  className="flex-1 bg-gray-900 dark:bg-white dark:text-gray-900 text-white py-2 rounded-md text-sm hover:opacity-80"
+                  className="flex-1 bg-gray-900 dark:bg-white dark:text-gray-900 text-white py-2.5 rounded-lg text-sm hover:opacity-80 transition-opacity font-medium"
                 >
                   Cerrar
                 </button>

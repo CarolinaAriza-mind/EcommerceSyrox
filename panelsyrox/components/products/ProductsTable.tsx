@@ -35,11 +35,7 @@ export default function ProductsTable({
     isOpen: boolean;
     productId: string | null;
     isDeleting: boolean;
-  }>({
-    isOpen: false,
-    productId: null,
-    isDeleting: false,
-  });
+  }>({ isOpen: false, productId: null, isDeleting: false });
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
@@ -60,15 +56,11 @@ export default function ProductsTable({
   const handleConfirmDelete = async () => {
     if (!deleteConfirm.productId) return;
     setDeleteConfirm((prev) => ({ ...prev, isDeleting: true }));
-
     try {
       const token = getTokenFromCookie();
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/admin/products/${deleteConfirm.productId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token ?? ""}` },
-        },
+        { method: "DELETE", headers: { Authorization: `Bearer ${token ?? ""}` } },
       );
       if (res.ok || res.status === 204) {
         setDeleteConfirm({ isOpen: false, productId: null, isDeleting: false });
@@ -86,180 +78,157 @@ export default function ProductsTable({
   return (
     <>
       <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+
         {/* Barra de búsqueda y filtros */}
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-wrap gap-3 items-center justify-between">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 shrink-0">
             Mostrando{" "}
             {filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
             –{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} de{" "}
             {filtered.length} productos
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar productos por nombre..."
+                placeholder="Buscar por nombre..."
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-8 pr-3 py-1.5 w-64 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                className="pl-8 pr-3 py-1.5 w-full sm:w-56 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
               />
             </div>
-            <select
-              value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md px-3 py-1.5 text-sm focus:outline-none"
-            >
-              <option value="">Todos</option>
-              <option value="ACTIVE">Activo</option>
-              <option value="INACTIVE">Inactivo</option>
-            </select>
-            {(search || filterStatus) && (
-              <button
-                onClick={() => {
-                  setSearch("");
-                  setFilterStatus("");
-                  setCurrentPage(1);
-                }}
-                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md"
+            <div className="flex gap-2">
+              <select
+                value={filterStatus}
+                onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+                className="flex-1 sm:flex-none border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md px-3 py-1.5 text-sm focus:outline-none"
               >
-                Limpiar
-              </button>
-            )}
+                <option value="">Todos</option>
+                <option value="ACTIVE">Activo</option>
+                <option value="INACTIVE">Inactivo</option>
+              </select>
+              {(search || filterStatus) && (
+                <button
+                  onClick={() => { setSearch(""); setFilterStatus(""); setCurrentPage(1); }}
+                  className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-md whitespace-nowrap"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        <table className="w-full text-sm">
-          <thead className="border-b border-gray-100 dark:border-gray-700">
-            <tr className="text-gray-500 dark:text-gray-400 text-left">
-              <th className="px-4 py-3 font-medium w-10">#</th>
-              <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Categoría</th>
-              <th className="px-4 py-3 font-medium">Marca</th>
-              <th className="px-4 py-3 font-medium">Precio</th>
-              <th className="px-4 py-3 font-medium">Stock</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginated.length === 0 && (
-              <tr>
-                <td colSpan={8} className="text-center py-8 text-gray-400">
-                  No hay productos para mostrar.
-                </td>
+        {/* Tabla con scroll horizontal en móvil */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
+            <thead className="border-b border-gray-100 dark:border-gray-700">
+              <tr className="text-gray-500 dark:text-gray-400 text-left">
+                <th className="px-4 py-3 font-medium w-10">#</th>
+                <th className="px-4 py-3 font-medium">Nombre</th>
+                <th className="px-4 py-3 font-medium">Categoría</th>
+                <th className="px-4 py-3 font-medium">Marca</th>
+                <th className="px-4 py-3 font-medium">Precio</th>
+                <th className="px-4 py-3 font-medium">Stock</th>
+                <th className="px-4 py-3 font-medium">Estado</th>
+                <th className="px-4 py-3 font-medium">Acciones</th>
               </tr>
-            )}
-            {paginated.map((product, index) => (
-              <tr
-                key={product.id}
-                className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <td className="px-4 py-3 text-gray-400 text-xs">
-                  {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-gray-100 dark:bg-gray-700 overflow-hidden shrink-0 flex items-center justify-center">
-                      {product.imageUrl ? (
-                        <Image
-                          src={product.imageUrl}
-                          alt={product.name}
-                          width={40}
-                          height={40}
-                          className="object-cover w-full h-full"
-                        />
-                      ) : (
-                        <span className="text-gray-300 text-xs">Sin img</span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-white truncate max-w-xs">
-                        {product.name}
-                      </p>
-                      {product.description && (
-                        <p className="text-xs text-gray-400 truncate max-w-xs">
-                          {product.description}
+            </thead>
+            <tbody>
+              {paginated.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-gray-400 text-sm">
+                    No hay productos para mostrar.
+                  </td>
+                </tr>
+              )}
+              {paginated.map((product, index) => (
+                <tr
+                  key={product.id}
+                  className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <td className="px-4 py-3 text-gray-400 text-xs">
+                    {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-gray-100 dark:bg-gray-700 overflow-hidden shrink-0 flex items-center justify-center">
+                        {product.imageUrl ? (
+                          <Image
+                            src={product.imageUrl}
+                            alt={product.name}
+                            width={40}
+                            height={40}
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <span className="text-gray-300 text-xs">Sin img</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-800 dark:text-white truncate max-w-[140px] sm:max-w-xs">
+                          {product.name}
                         </p>
-                      )}
+                        {product.description && (
+                          <p className="text-xs text-gray-400 truncate max-w-[140px] sm:max-w-xs">
+                            {product.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                  {product.category?.name ?? "—"}
-                </td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                  {product.brand?.name ?? "—"}
-                </td>
-                <td className="px-4 py-3 font-medium text-gray-800 dark:text-white">
-                  ${Number(product.price).toLocaleString("es-AR")}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                    {product.category?.name ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                    {product.brand?.name ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 font-medium text-gray-800 dark:text-white whitespace-nowrap">
+                    ${Number(product.price).toLocaleString("es-AR")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
                       product.stock === 0
                         ? "bg-red-100 text-red-700"
                         : product.stock <= 5
                           ? "bg-yellow-100 text-yellow-700"
                           : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {product.stock} uds.
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    }`}>
+                      {product.stock} uds.
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
                       product.status === "ACTIVE"
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {product.status === "ACTIVE" ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => onView(product)}
-                      className="text-gray-400 hover:text-gray-700 dark:hover:text-white"
-                      title="Ver detalles"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      onClick={() => setEditProduct(product)}
-                      className="text-gray-400 hover:text-blue-600"
-                      title="Editar"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(product.id)}
-                      className="text-gray-400 hover:text-red-600"
-                      title="Eliminar"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    }`}>
+                      {product.status === "ACTIVE" ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button onClick={() => onView(product)} className="text-gray-400 hover:text-gray-700 dark:hover:text-white p-1" title="Ver detalles">
+                        <Eye size={15} />
+                      </button>
+                      <button onClick={() => setEditProduct(product)} className="text-gray-400 hover:text-blue-600 p-1" title="Editar">
+                        <Pencil size={15} />
+                      </button>
+                      <button onClick={() => handleDeleteClick(product.id)} className="text-gray-400 hover:text-red-600 p-1" title="Eliminar">
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Paginación */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-4">
+          <div className="p-3 sm:p-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-2 sm:gap-4">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
@@ -267,7 +236,7 @@ export default function ProductsTable({
             >
               ←
             </button>
-            <div className="flex-1 flex items-center gap-3">
+            <div className="flex-1 flex items-center gap-2 min-w-[120px]">
               <span className="text-xs text-gray-400 shrink-0">1</span>
               <input
                 type="range"
@@ -277,9 +246,7 @@ export default function ProductsTable({
                 onChange={(e) => setCurrentPage(Number(e.target.value))}
                 className="flex-1 accent-gray-900 dark:accent-white cursor-pointer"
               />
-              <span className="text-xs text-gray-400 shrink-0">
-                {totalPages}
-              </span>
+              <span className="text-xs text-gray-400 shrink-0">{totalPages}</span>
             </div>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
@@ -288,22 +255,20 @@ export default function ProductsTable({
             >
               →
             </button>
-            <div className="flex gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-7 h-7 text-xs rounded-md font-medium transition-colors ${
-                      page === currentPage
-                        ? "bg-gray-900 dark:bg-white dark:text-gray-900 text-white"
-                        : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ),
-              )}
+            <div className="flex gap-1 flex-wrap">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-7 h-7 text-xs rounded-md font-medium transition-colors ${
+                    page === currentPage
+                      ? "bg-gray-900 dark:bg-white dark:text-gray-900 text-white"
+                      : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
             </div>
             <p className="text-xs text-gray-400 shrink-0">
               Pág. {currentPage} / {totalPages}
@@ -318,10 +283,7 @@ export default function ProductsTable({
           brands={Array.isArray(brands) ? brands : []}
           product={editProduct}
           onClose={() => setEditProduct(null)}
-          onSuccess={() => {
-            setEditProduct(null);
-            onRefresh();
-          }}
+          onSuccess={() => { setEditProduct(null); onRefresh(); }}
         />
       )}
 
@@ -334,13 +296,7 @@ export default function ProductsTable({
         isDangerous
         isLoading={deleteConfirm.isDeleting}
         onConfirm={handleConfirmDelete}
-        onCancel={() =>
-          setDeleteConfirm({
-            isOpen: false,
-            productId: null,
-            isDeleting: false,
-          })
-        }
+        onCancel={() => setDeleteConfirm({ isOpen: false, productId: null, isDeleting: false })}
       />
     </>
   );

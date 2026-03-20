@@ -70,34 +70,39 @@ export default function ProductsPage() {
   }, []);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+    <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-screen-xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
           Productos
         </h1>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-4 py-2 rounded-md text-sm hover:opacity-80"
+          className="flex items-center justify-center gap-2 bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-4 py-2 rounded-md text-sm hover:opacity-80 w-full sm:w-auto"
         >
           <Plus size={16} />
           Nuevo Producto
         </button>
       </div>
 
+      {/* Contenido */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <p className="text-gray-400">Cargando productos...</p>
+          <p className="text-gray-400 text-sm sm:text-base">Cargando productos...</p>
         </div>
       ) : (
-        <ProductsTable
-          products={products}
-          categories={categories}
-          brands={brands}
-          onRefresh={fetchProducts}
-          onView={(p) => setViewProduct(p)}
-        />
+        <div className="w-full overflow-x-auto rounded-lg">
+          <ProductsTable
+            products={products}
+            categories={categories}
+            brands={brands}
+            onRefresh={fetchProducts}
+            onView={(p) => setViewProduct(p)}
+          />
+        </div>
       )}
 
+      {/* Modal nuevo producto */}
       {showModal && (
         <ProductModal
           categories={categories}
@@ -110,6 +115,7 @@ export default function ProductsPage() {
         />
       )}
 
+      {/* Modal detalle producto */}
       {viewProduct && (
         <ProductDetailModal
           product={viewProduct}

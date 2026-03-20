@@ -27,7 +27,6 @@ export default function ProductModal({
 
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [brands, setBrands] = useState<Brand[]>(initialBrands);
-
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [price, setPrice] = useState(product?.price ?? 0);
@@ -40,14 +39,11 @@ export default function ProductModal({
   );
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>(
-    product?.imageUrl ?? "",
-  );
+  const [imagePreview, setImagePreview] = useState<string>(product?.imageUrl ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ← Fetchea categorías y marcas frescas al abrir el modal
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -62,13 +58,9 @@ export default function ProductModal({
         ]);
         if (catRes.ok) {
           const data = await catRes.json();
-          if (Array.isArray(data)) {
-            setCategories(data);
-          } else if (data && Array.isArray(data.items)) {
-            setCategories(data.items);
-          } else {
-            setCategories([]);
-          }
+          if (Array.isArray(data)) setCategories(data);
+          else if (data && Array.isArray(data.items)) setCategories(data.items);
+          else setCategories([]);
         }
         if (brandRes.ok) {
           const data = (await brandRes.json()) as Brand[];
@@ -99,14 +91,8 @@ export default function ProductModal({
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      setError("El nombre es requerido");
-      return;
-    }
-    if (price <= 0) {
-      setError("El precio debe ser mayor a 0");
-      return;
-    }
+    if (!name.trim()) { setError("El nombre es requerido"); return; }
+    if (price <= 0) { setError("El precio debe ser mayor a 0"); return; }
 
     setLoading(true);
     setError("");
@@ -147,21 +133,20 @@ export default function ProductModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="font-semibold text-gray-800 dark:text-white">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-xl w-full sm:max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-xl">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-900 z-10">
+          <h2 className="font-semibold text-gray-800 dark:text-white text-base sm:text-lg">
             {isEdit ? "Editar Producto" : "Nuevo Producto"}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
             <X size={20} />
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-4 sm:p-5 space-y-4">
           {/* Imagen */}
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
@@ -172,37 +157,21 @@ export default function ProductModal({
               className="border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
             >
               {imagePreview ? (
-                <div className="relative w-full h-40">
-                  <Image
-                    src={imagePreview}
-                    alt="Preview"
-                    fill
-                    className="object-contain rounded-md"
-                  />
+                <div className="relative w-full h-36 sm:h-40">
+                  <Image src={imagePreview} alt="Preview" fill className="object-contain rounded-md" />
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 py-4">
                   <ImageIcon size={32} className="text-gray-300" />
-                  <p className="text-sm text-gray-400">
-                    Hacé clic para subir una imagen
-                  </p>
+                  <p className="text-sm text-gray-400 text-center">Tocá para subir una imagen</p>
                   <p className="text-xs text-gray-300">PNG, JPG hasta 5MB</p>
                 </div>
               )}
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
             {imagePreview && (
               <button
-                onClick={() => {
-                  setImagePreview("");
-                  setImageFile(null);
-                }}
+                onClick={() => { setImagePreview(""); setImageFile(null); }}
                 className="text-xs text-red-500 hover:text-red-700 mt-1"
               >
                 Quitar imagen
@@ -239,7 +208,7 @@ export default function ProductModal({
           </div>
 
           {/* Precio y Stock */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
                 Precio *
@@ -279,30 +248,20 @@ export default function ProductModal({
             >
               <option value="">Sin categoría</option>
               {categories
-                .filter(
-                  (c) =>
-                    c.parentId === null ||
-                    c.parentId === undefined ||
-                    c.parentId === "",
-                )
+                .filter((c) => c.parentId === null || c.parentId === undefined || c.parentId === "")
                 .map((parent) => (
                   <optgroup key={parent.id} label={parent.name}>
                     <option value={parent.id}>{parent.name}</option>
                     {categories
                       .filter((c) => c.parentId === parent.id)
                       .map((child) => (
-                        <option key={child.id} value={child.id}>
-                          {"  "}
-                          {child.name}
-                        </option>
+                        <option key={child.id} value={child.id}>{"  "}{child.name}</option>
                       ))}
                   </optgroup>
                 ))}
             </select>
             <p className="text-xs text-gray-400 mt-1">
-              {categories.length === 0
-                ? "Cargando categorías..."
-                : `${categories.length} categorías disponibles`}
+              {categories.length === 0 ? "Cargando categorías..." : `${categories.length} categorías disponibles`}
             </p>
           </div>
 
@@ -312,23 +271,14 @@ export default function ProductModal({
               Marca
             </label>
             <div className="relative">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Buscar marca..."
                 value={brandSearch}
-                onChange={(e) => {
-                  setBrandSearch(e.target.value);
-                  setBrandId("");
-                  setShowBrandDropdown(true);
-                }}
+                onChange={(e) => { setBrandSearch(e.target.value); setBrandId(""); setShowBrandDropdown(true); }}
                 onFocus={() => setShowBrandDropdown(true)}
-                onBlur={() =>
-                  setTimeout(() => setShowBrandDropdown(false), 150)
-                }
+                onBlur={() => setTimeout(() => setShowBrandDropdown(false), 150)}
                 className="w-full pl-8 pr-3 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
               />
             </div>
@@ -348,10 +298,7 @@ export default function ProductModal({
             )}
             {brandId && (
               <button
-                onClick={() => {
-                  setBrandId("");
-                  setBrandSearch("");
-                }}
+                onClick={() => { setBrandId(""); setBrandSearch(""); }}
                 className="text-xs text-red-500 hover:text-red-700 mt-1"
               >
                 Quitar marca
@@ -384,13 +331,9 @@ export default function ProductModal({
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-gray-900 dark:bg-white dark:text-gray-900 text-white py-2.5 rounded-md text-sm font-medium hover:opacity-80 disabled:opacity-50"
+            className="w-full bg-gray-900 dark:bg-white dark:text-gray-900 text-white py-3 rounded-md text-sm font-medium hover:opacity-80 disabled:opacity-50"
           >
-            {loading
-              ? "Guardando..."
-              : isEdit
-                ? "Guardar cambios"
-                : "Crear producto"}
+            {loading ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear producto"}
           </button>
         </div>
       </div>
