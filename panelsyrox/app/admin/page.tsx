@@ -22,7 +22,7 @@ function StatusBadge({ status }: { status: string }) {
     CANCELLED: 'Cancelado',
   };
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles[status] ?? 'bg-gray-100 text-gray-600'}`}>
+    <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${styles[status] ?? 'bg-gray-100 text-gray-600'}`}>
       {labels[status] ?? status}
     </span>
   );
@@ -61,42 +61,47 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-screen-xl mx-auto">
+    <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 max-w-screen-xl mx-auto">
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
           Inicio
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
           Resumen general de tu tienda
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+      {/* Cards grid: 1 col mobile → 2 col tablet → 3 col desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
 
-        {/* Inventario */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-700 dark:text-gray-200 text-sm uppercase tracking-wider">
+        {/* ── Inventario ─────────────────────────────── */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 sm:p-5 flex flex-col">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="font-semibold text-gray-700 dark:text-gray-200 text-xs sm:text-sm uppercase tracking-wider">
               Inventario
             </h2>
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-              <Package size={16} className="text-gray-500 dark:text-gray-400" />
+            <div className="p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 rounded-lg shrink-0">
+              <Package size={15} className="text-gray-500 dark:text-gray-400" />
             </div>
           </div>
 
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">
+          <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             {data?.inventory?.total ?? 0}
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-4 mt-0.5">
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-3 sm:mb-4 mt-0.5 truncate">
             productos · Valor: ${data?.inventory?.value?.toLocaleString('es-AR') ?? 0}
           </p>
 
-          <div className="space-y-2 flex-1 max-h-56 overflow-y-auto pr-1">
+          {/* Product list — capped height, scrollable */}
+          <div className="space-y-1.5 flex-1 max-h-48 sm:max-h-56 overflow-y-auto pr-1">
             {data?.inventory?.products?.map((p: DashboardProduct) => (
-              <div key={p.id} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 dark:border-gray-800 last:border-0">
-                <span className="text-gray-700 dark:text-gray-300 truncate max-w-[70%]">
+              <div
+                key={p.id}
+                className="flex justify-between items-center text-sm py-1 border-b border-gray-50 dark:border-gray-800 last:border-0 gap-2"
+              >
+                <span className="text-gray-700 dark:text-gray-300 truncate min-w-0 flex-1 text-xs sm:text-sm">
                   {p.name}
                 </span>
                 <span className="text-gray-400 dark:text-gray-500 shrink-0 text-xs font-mono">
@@ -109,57 +114,59 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-700">
             <button
               onClick={() => router.push('/admin/products')}
-              className="flex-1 text-sm bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-3 py-2 rounded-lg hover:opacity-80 transition-opacity font-medium"
+              className="flex-1 text-xs sm:text-sm bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-2 sm:px-3 py-2 rounded-lg hover:opacity-80 transition-opacity font-medium"
             >
               + Añadir
             </button>
             <button
               onClick={() => router.push('/admin/products')}
-              className="flex-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="flex-1 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-2 sm:px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Ver todos
             </button>
           </div>
         </div>
 
-        {/* Ventas Recientes */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-700 dark:text-gray-200 text-sm uppercase tracking-wider">
+        {/* ── Ventas Recientes ───────────────────────── */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 sm:p-5 flex flex-col">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="font-semibold text-gray-700 dark:text-gray-200 text-xs sm:text-sm uppercase tracking-wider">
               Ventas Recientes
             </h2>
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-              <ShoppingCart size={16} className="text-gray-500 dark:text-gray-400" />
+            <div className="p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 rounded-lg shrink-0">
+              <ShoppingCart size={15} className="text-gray-500 dark:text-gray-400" />
             </div>
           </div>
 
-          <div className="space-y-0 flex-1 max-h-72 overflow-y-auto">
+          <div className="flex-1 max-h-64 sm:max-h-72 overflow-y-auto">
             {!data?.recentSales?.length && (
               <p className="text-sm text-gray-400">No hay ventas recientes.</p>
             )}
             {data?.recentSales?.map((sale: DashboardSale) => (
               <div
                 key={sale.id}
-                className="flex justify-between items-start py-3 border-b border-gray-50 dark:border-gray-800 last:border-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 rounded-lg px-2 -mx-2 transition-colors"
+                className="flex justify-between items-start py-2.5 sm:py-3 border-b border-gray-50 dark:border-gray-800 last:border-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 rounded-lg px-2 -mx-2 transition-colors gap-2"
                 onClick={() => router.push('/admin/sales')}
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-800 dark:text-white truncate">
+                {/* Left side */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-800 dark:text-white truncate">
                     {sale.customer?.name}
                   </p>
-                  <p className="text-xs text-gray-400 mb-1.5">
+                  <p className="text-xs text-gray-400 mb-1">
                     #{sale.id.slice(0, 8).toUpperCase()}
                   </p>
                   <StatusBadge status={sale.status} />
                 </div>
-                <div className="text-right shrink-0 ml-3">
-                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                {/* Right side */}
+                <div className="text-right shrink-0">
+                  <p className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
                     ${Number(sale.total).toLocaleString('es-AR')}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-400 mt-0.5 whitespace-nowrap">
                     {new Date(sale.date).toLocaleDateString('es-AR')}
                   </p>
                 </div>
@@ -169,20 +176,21 @@ export default function AdminDashboard() {
 
           <button
             onClick={() => router.push('/admin/sales')}
-            className="w-full mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="w-full mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-700 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             Ver todas las ventas →
           </button>
         </div>
 
-        {/* Top Productos */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex flex-col md:col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-700 dark:text-gray-200 text-sm uppercase tracking-wider">
+        {/* ── Top Productos ──────────────────────────── */}
+        {/* spans 2 cols on tablet so it fills the row, back to 1 on desktop */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 sm:p-5 flex flex-col sm:col-span-2 xl:col-span-1">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="font-semibold text-gray-700 dark:text-gray-200 text-xs sm:text-sm uppercase tracking-wider">
               Más Vendidos
             </h2>
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-              <TrendingUp size={16} className="text-gray-500 dark:text-gray-400" />
+            <div className="p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 rounded-lg shrink-0">
+              <TrendingUp size={15} className="text-gray-500 dark:text-gray-400" />
             </div>
           </div>
 
@@ -193,11 +201,11 @@ export default function AdminDashboard() {
               {data.topProducts.map((tp: TopProduct, index: number) => (
                 <div
                   key={tp.productId}
-                  className="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 rounded-lg px-2 py-2.5 -mx-2 transition-colors"
+                  className="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 rounded-lg px-2 py-2 sm:py-2.5 -mx-2 transition-colors gap-2"
                   onClick={() => router.push('/admin/products')}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-bold shrink-0 ${
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full text-xs flex items-center justify-center font-bold shrink-0 ${
                       index === 0
                         ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400'
                         : index === 1
@@ -208,11 +216,11 @@ export default function AdminDashboard() {
                     }`}>
                       {index + 1}
                     </span>
-                    <span className="text-gray-700 dark:text-gray-300 truncate">
+                    <span className="text-gray-700 dark:text-gray-300 truncate text-xs sm:text-sm">
                       {tp.product?.name}
                     </span>
                   </div>
-                  <span className="text-gray-400 dark:text-gray-500 shrink-0 text-xs font-mono ml-3">
+                  <span className="text-gray-400 dark:text-gray-500 shrink-0 text-xs font-mono whitespace-nowrap">
                     {tp._sum?.quantity} uds.
                   </span>
                 </div>
@@ -222,7 +230,7 @@ export default function AdminDashboard() {
 
           <button
             onClick={() => router.push('/admin/products')}
-            className="w-full mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="w-full mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-700 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             Ver todos los productos →
           </button>

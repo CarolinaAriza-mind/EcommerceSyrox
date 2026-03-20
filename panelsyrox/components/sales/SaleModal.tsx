@@ -10,17 +10,14 @@ import {
 } from "@/interfaces/sales.interfaces";
 import { getTokenFromCookie } from "@/lib/auth";
 import ConfirmModal from "../shared/ConfirmModal";
+
 interface SaleModalProps {
   sale: Sale;
   onClose: () => void;
   onStatusUpdate: (updated: Sale) => void;
 }
 
-export default function SaleModal({
-  sale,
-  onClose,
-  onStatusUpdate,
-}: SaleModalProps) {
+export default function SaleModal({ sale, onClose, onStatusUpdate }: SaleModalProps) {
   const [notes, setNotes] = useState("");
   const [trackingCode, setTrackingCode] = useState(sale.trackingCode ?? "");
   const [loading, setLoading] = useState(false);
@@ -28,10 +25,7 @@ export default function SaleModal({
   const [cancelConfirm, setCancelConfirm] = useState<{
     isOpen: boolean;
     isCancelling: boolean;
-  }>({
-    isOpen: false,
-    isCancelling: false,
-  });
+  }>({ isOpen: false, isCancelling: false });
 
   const nextStatus = NEXT_STATUS[currentSale.status];
   const isFinished =
@@ -103,56 +97,62 @@ export default function SaleModal({
     }
   };
 
-  // Limpiar "null" de la dirección
   const cleanAddress = currentSale.address?.replace(/,?\s*null/gi, "").trim();
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="font-semibold text-gray-800 dark:text-white">
+    /* Overlay */
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/*
+        Mobile  : bottom sheet (rounded-t-2xl, sube desde abajo)
+        ≥sm     : modal centrado (rounded-xl)
+      */}
+      <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-xl w-full sm:max-w-lg max-h-[92dvh] sm:max-h-[90vh] flex flex-col shadow-xl">
+
+        {/* ── Header (sticky) ─────────────────────── */}
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-100 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-900 z-10 shrink-0">
+          <h2 className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">
             Gestionar Orden
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 p-1 -mr-1"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        {/* ── Body (scrollable) ───────────────────── */}
+        <div className="overflow-y-auto flex-1 px-4 sm:px-5 py-4 sm:py-5 space-y-3 sm:space-y-4">
+
           {/* Estado actual */}
-          <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-2 font-medium">
-              Estado Actual
-            </p>
-            <div className="flex items-center gap-3">
-              <span
-                className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_STYLES[currentSale.status]}`}
-              >
+          <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-3 sm:p-4">
+            <p className="text-xs text-gray-500 mb-2 font-medium">Estado Actual</p>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${STATUS_STYLES[currentSale.status]}`}>
                 {STATUS_LABELS[currentSale.status]}
               </span>
               <span className="text-xs text-gray-400 font-mono">
-                Orden #{currentSale.id.slice(0, 8).toUpperCase()}
+                #{currentSale.id.slice(0, 8).toUpperCase()}
               </span>
             </div>
           </div>
 
-          {/* Info cliente + pago */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <User size={14} className="text-gray-400" />
-                <p className="text-xs font-medium text-gray-500">
-                  Información del Cliente
-                </p>
+          {/* Info cliente + pago
+              Mobile: stack vertical (1 col)
+              ≥sm: 2 cols side-by-side
+          */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+
+            {/* Cliente */}
+            <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <User size={13} className="text-gray-400 shrink-0" />
+                <p className="text-xs font-medium text-gray-500">Cliente</p>
               </div>
-              <p className="font-medium text-gray-800 dark:text-white text-sm">
+              <p className="font-medium text-gray-800 dark:text-white text-sm truncate">
                 {currentSale.customer.name}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-400 mt-1 truncate">
                 {currentSale.customer.email}
               </p>
               {currentSale.customer.phone && (
@@ -165,53 +165,50 @@ export default function SaleModal({
               </p>
             </div>
 
-            <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <CreditCard size={14} className="text-gray-400" />
-                <p className="text-xs font-medium text-gray-500">
-                  Información de Pago
-                </p>
+            {/* Pago */}
+            <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <CreditCard size={13} className="text-gray-400 shrink-0" />
+                <p className="text-xs font-medium text-gray-500">Pago</p>
               </div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500">Método:</span>
-                <span className="font-medium dark:text-white text-xs">
-                  {currentSale.paymentMethod ?? "Tarjeta de Crédito"}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500">Estado:</span>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-xs text-gray-500 shrink-0">Método</span>
+                  <span className="font-medium dark:text-white text-xs truncate text-right">
+                    {currentSale.paymentMethod ?? "Tarjeta de Crédito"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-xs text-gray-500 shrink-0">Estado</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-md font-medium whitespace-nowrap ${
                     currentSale.status === "CANCELLED"
                       ? "bg-red-600 text-white"
                       : "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-                  }`}
-                >
-                  {currentSale.status === "CANCELLED" ? "Fallido" : "Pagado"}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Total:</span>
-                <span className="font-semibold text-gray-800 dark:text-white">
-                  ${Number(currentSale.total).toLocaleString("es-AR")}
-                </span>
+                  }`}>
+                    {currentSale.status === "CANCELLED" ? "Fallido" : "Pagado"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-xs text-gray-500 shrink-0">Total</span>
+                  <span className="font-semibold text-gray-800 dark:text-white text-sm tabular-nums">
+                    ${Number(currentSale.total).toLocaleString("es-AR")}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Dirección de envío */}
+          {/* Envío */}
           {(cleanAddress ?? currentSale.trackingCode) && (
-            <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <MapPin size={14} className="text-gray-400" />
-                <p className="text-xs font-medium text-gray-500">
-                  Información de Envío
-                </p>
+            <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <MapPin size={13} className="text-gray-400 shrink-0" />
+                <p className="text-xs font-medium text-gray-500">Envío</p>
               </div>
               {cleanAddress && (
                 <div className="mb-2">
-                  <p className="text-xs text-gray-500">Dirección de Envío:</p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-xs text-gray-500">Dirección:</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 break-words">
                     {cleanAddress}
                   </p>
                 </div>
@@ -219,7 +216,7 @@ export default function SaleModal({
               {currentSale.trackingCode && (
                 <div>
                   <p className="text-xs text-gray-500">Tracking:</p>
-                  <p className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                  <p className="text-sm font-mono text-gray-700 dark:text-gray-300 break-all">
                     {currentSale.trackingCode}
                   </p>
                 </div>
@@ -227,13 +224,11 @@ export default function SaleModal({
             </div>
           )}
 
-          {/* Historial de Modificaciones */}
-          <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock size={14} className="text-gray-400" />
-              <p className="text-xs font-medium text-gray-500">
-                Historial de Modificaciones
-              </p>
+          {/* Historial */}
+          <div className="border border-gray-100 dark:border-gray-700 rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <Clock size={13} className="text-gray-400 shrink-0" />
+              <p className="text-xs font-medium text-gray-500">Historial de Modificaciones</p>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 mt-0.5">
@@ -241,10 +236,8 @@ export default function SaleModal({
                   {currentSale.customer.name.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${STATUS_STYLES[currentSale.status]}`}
-                >
+              <div className="min-w-0 flex-1">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_STYLES[currentSale.status]}`}>
                   {STATUS_LABELS[currentSale.status]}
                 </span>
                 <p className="text-xs text-gray-400 mt-1">
@@ -258,7 +251,7 @@ export default function SaleModal({
                 </p>
                 {currentSale.notes &&
                   currentSale.notes.split("\n").map((line, i) => (
-                    <p key={i} className="text-xs text-gray-500 mt-1">
+                    <p key={i} className="text-xs text-gray-500 mt-1 break-words">
                       {line}
                     </p>
                   ))}
@@ -266,7 +259,7 @@ export default function SaleModal({
             </div>
           </div>
 
-          {/* Tracking (solo para PREPARING) */}
+          {/* Tracking — solo en PREPARING */}
           {currentSale.status === "PREPARING" && (
             <div>
               <label className="text-xs text-gray-500 font-medium block mb-1">
@@ -286,7 +279,7 @@ export default function SaleModal({
           {!isFinished && (
             <div>
               <label className="text-xs text-gray-500 font-medium block mb-1">
-                Notas para el cambio de estado (opcional)
+                Notas (opcional)
               </label>
               <textarea
                 value={notes}
@@ -301,9 +294,7 @@ export default function SaleModal({
           {/* Acciones */}
           {!isFinished && (
             <div className="space-y-2">
-              <p className="text-xs font-medium text-gray-500">
-                Acciones Disponibles
-              </p>
+              <p className="text-xs font-medium text-gray-500">Acciones Disponibles</p>
               <button
                 onClick={handleUpdateStatus}
                 disabled={loading}
@@ -322,7 +313,8 @@ export default function SaleModal({
               )}
             </div>
           )}
-        </div>
+
+        </div>{/* /body */}
       </div>
 
       <ConfirmModal
@@ -334,9 +326,7 @@ export default function SaleModal({
         isDangerous
         isLoading={cancelConfirm.isCancelling}
         onConfirm={handleConfirmCancel}
-        onCancel={() =>
-          setCancelConfirm({ isOpen: false, isCancelling: false })
-        }
+        onCancel={() => setCancelConfirm({ isOpen: false, isCancelling: false })}
       />
     </div>
   );
